@@ -18,7 +18,7 @@ public class AddCommand extends Command {
     /** The required prefixes for the add command. */
     public static final String[] REQUIRED_PREFIXES = {"t/", "d/", "dir/", "e/", "x/", "s/", "o/", "strat/"};
 
-    private final HashMap<String, String> parsedArgs;
+    private final Trade addTrade;
 
     /**
      * Constructs an AddCommand by parsing and validating the raw arguments string.
@@ -27,7 +27,7 @@ public class AddCommand extends Command {
      * @throws TradeLogException If any required prefix is missing or blank.
      */
     public AddCommand(String arguments) throws TradeLogException {
-        parsedArgs = ArgumentTokeniser.tokenise(arguments, REQUIRED_PREFIXES);
+        HashMap<String, String> parsedArgs = ArgumentTokeniser.tokenise(arguments, REQUIRED_PREFIXES);
         for (String prefix : REQUIRED_PREFIXES) {
             if (!parsedArgs.containsKey(prefix)) {
                 throw new TradeLogException("Missing required prefix: " + prefix);
@@ -36,10 +36,38 @@ public class AddCommand extends Command {
                 throw new TradeLogException("The value for " + prefix + " cannot be empty.");
             }
         }
+
+        double entryPrice;
+        double exitPrice;
+        double stopLossPrice;
+        try {
+            entryPrice = Double.parseDouble(parsedArgs.get("e/"));
+            exitPrice = Double.parseDouble(parsedArgs.get("x/"));
+            stopLossPrice = Double.parseDouble(parsedArgs.get("s/"));
+        } catch (NumberFormatException e) {
+            throw new TradeLogException("Entry, Exit, and Stop Loss must be valid numbers!");
+        }
+
+        if (entryPrice == exitPrice) {
+            throw new TradeLogException("Entry price and exit price cannot have the same value.");
+        }
+
+        String ticker = parsedArgs.get("t/").trim().toUpperCase();
+        String rawDir = parsedArgs.get("dir/").trim().toLowerCase();
+        if (!rawDir.equals("long") && !rawDir.equals("short")) {
+            throw new TradeLogException("Direction must be exactly 'long' or 'short'!");
+        }
+        String direction = rawDir.substring(0, 1).toUpperCase() + rawDir.substring(1);
+        String date = parsedArgs.get("d/").trim();
+        String outcome = parsedArgs.get("o/").trim();
+        String strategy = parsedArgs.get("strat/").trim();
+
+        this.addTrade = new Trade(ticker, date, direction,
+                entryPrice, exitPrice, stopLossPrice, outcome, strategy);
     }
 
     /**
-     * Executes the add command by creating a new Trade, adding it to the TradeList,
+     * Executes the add command by adding the trade to the TradeList
      * and displaying the trade summary to the user.
      *
      * @param tradeList The current list of trades.
@@ -48,29 +76,8 @@ public class AddCommand extends Command {
      */
     @Override
     public void execute(TradeList tradeList, Ui ui, Storage storage) {
-        try {
-            double entry = Double.parseDouble(parsedArgs.get("e/"));
-            double exit = Double.parseDouble(parsedArgs.get("x/"));
-            double stop = Double.parseDouble(parsedArgs.get("s/"));
-            String ticker = parsedArgs.get("t/").toUpperCase();
-            String rawDir = parsedArgs.get("dir/");
-            String direction = rawDir.substring(0, 1).toUpperCase()
-                    + rawDir.substring(1).toLowerCase();
-            Trade newTrade = new Trade(
-                    ticker,
-                    parsedArgs.get("d/"),
-                    direction,
-                    entry,
-                    exit,
-                    stop,
-                    parsedArgs.get("o/"),
-                    parsedArgs.get("strat/")
-            );
-            tradeList.addTrade(newTrade);
-            ui.printTrade(newTrade);
-            ui.showTradeAdded();
-        } catch (NumberFormatException e) {
-            ui.showError("Entry, Exit, and Stop Loss must be valid numbers!");
-        }
+        tradeList.addTrade(addTrade);
+        ui.printTrade(addTrade);
+        ui.showTradeAdded();
     }
 }
