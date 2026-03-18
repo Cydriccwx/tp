@@ -110,12 +110,30 @@ public class Trade {
     }
 
     /**
+     * Returns a single-line string representation of the trade.
+     * Matches the expected output: 1. AAPL | 2026-02-18 | Long | E:180 | TP:190 | SL:170 | Win | Breakout
+     *
+     * @return Formatted trade details.
+     */
+    @Override
+    public String toString() {
+        return ticker + " | " +
+                date + " | " +
+                direction + " | " +
+                "E:" + formatPrice(entryPrice) + " | " +
+                "TP:" + formatPrice(exitPrice) + " | " +
+                "SL:" + formatPrice(stopLossPrice) + " | " +
+                outcome + " | " +
+                strategy;
+    }
+
+    /**
      * Sets the ticker symbol.
      *
      * @param ticker The new ticker symbol.
      */
     public void setTicker(String ticker) {
-        this.ticker = ticker;
+        this.ticker = ticker.toUpperCase();
     }
 
     /**
@@ -128,12 +146,12 @@ public class Trade {
     }
 
     /**
-     * Sets the trade direction.
+     * Sets the trade direction, normalising it to title case (e.g. "Long", "Short").
      *
-     * @param direction The new direction (Long or Short).
+     * @param rawDir The raw direction string (e.g. "long", "SHORT").
      */
-    public void setDirection(String direction) {
-        this.direction = direction;
+    public void setDirection(String rawDir) {
+        this.direction = rawDir.substring(0, 1).toUpperCase() + rawDir.substring(1).toLowerCase();
     }
 
     /**

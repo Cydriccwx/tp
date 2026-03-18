@@ -65,15 +65,14 @@ public class EditCommand extends Command {
             }
             Trade tradeToEdit = tradeList.getTrade(targetIndex);
             if (parsedArgs.containsKey("t/")) {
-                tradeToEdit.setTicker(parsedArgs.get("t/").toUpperCase());
+                tradeToEdit.setTicker(parsedArgs.get("t/"));
             }
             if (parsedArgs.containsKey("d/")) {
                 tradeToEdit.setDate(parsedArgs.get("d/"));
             }
             if (parsedArgs.containsKey("dir/")) {
-                String rawDir = parsedArgs.get("dir/");
-                tradeToEdit.setDirection(rawDir.substring(0, 1).toUpperCase()
-                        + rawDir.substring(1).toLowerCase());
+                // Formatting (title-case) is handled inside Trade.setDirection()
+                tradeToEdit.setDirection(parsedArgs.get("dir/"));
             }
             if (parsedArgs.containsKey("e/")) {
                 tradeToEdit.setEntryPrice(Double.parseDouble(parsedArgs.get("e/")));
