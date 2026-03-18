@@ -11,51 +11,46 @@ import tradelog.ui.Ui;
  * Handles parsing, strict validation of the trade index, and executing the deletion.
  */
 public class DeleteCommand extends Command {
-    private final int tradeIndex;
+    private final int targetIndex;
 
     /**
-     * Constructs a DeleteCommand by parsing and validating the raw arguments string.
-     * Strictly checks that the trade index is present and is a valid positive integer.
-     *
-     * @param arguments The raw string after the "delete" command word.
-     * @throws TradeLogException If the trade index is missing, blank, or not a valid positive integer.
+     * Represents a command to delete an existing trade from the TradeLog.
+     * Execution assumes the provided index has already been parsed and validated.
      */
-    public DeleteCommand(String arguments) throws TradeLogException {
-        arguments = arguments.trim();
-
-        if (arguments.isEmpty()) {
-            throw new TradeLogException("Missing trade index for delete command.");
-        }
-
-        try {
-            tradeIndex = Integer.parseInt(arguments);
-
-            if (tradeIndex <= 0) {
-                throw new TradeLogException("Trade index must be a positive integer.");
-            }
-        } catch (NumberFormatException e) {
-            throw new TradeLogException("Trade index must be a valid integer.");
-        }
+    /**
+     * * Represents a command to delete an existing trade from the TradeLog.
+     * * Execution assumes the provided index has already been parsed and validated.
+     *
+     */
+    /**
+     * Constructs a DeleteCommand with a parsed target index.
+     *
+     * @param targetIndex The zero-based index of the trade to delete.
+     */
+    public DeleteCommand(int targetIndex) {
+        this.targetIndex = targetIndex;
     }
 
     /**
-     * Executes the delete command by removing the trade at the specified index
-     * from the TradeList and displaying the deleted trade summary to the user.
+     * Executes the delete command by removing the trade and displaying the UI message.
      *
      * @param tradeList The current list of trades.
      * @param ui        The UI handler for output.
      * @param storage   The storage handler for persistence.
+     * @throws TradeLogException If the index provided does not exist in the list.
      */
     @Override
     public void execute(TradeList tradeList, Ui ui, Storage storage) {
         try {
-            Trade deletedTrade = tradeList.deleteTrade(tradeIndex - 1);
+            Trade deletedTrade = tradeList.deleteTrade(targetIndex);
 
-            System.out.println(deletedTrade.toSummaryString());
+            ui.showLine();
             System.out.println("Trade successfully deleted.");
+            System.out.println(deletedTrade.toSummaryString());
+            ui.showLine();
 
         } catch (IndexOutOfBoundsException e) {
-            System.out.println("Error: Trade index does not exist!");
+            throw new TradeLogException("Error: Trade index does not exist!");
         }
     }
 }
