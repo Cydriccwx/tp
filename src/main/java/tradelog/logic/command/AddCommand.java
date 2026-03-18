@@ -91,7 +91,7 @@ public class AddCommand extends Command{
         // Invariant: The last trade should be the one just added
         Trade lastTrade = tradeList.getTrade(tradeList.size() - 1);
         assert lastTrade.getTicker().equals(addTrade.getTicker()) : "Last trade ticker should match added trade";
-        assert lastTrade.getEntryPrice() == addTrade.getEntryPrice() : "Last trade entry price should match added trade";
+        assert lastTrade.getEntryPrice() == addTrade.getEntryPrice() : "Last trade entryPrice should match added trade";
         assert lastTrade.getStrategy().equals(addTrade.getStrategy()) : "Last trade strategy should match added trade";
 
         ui.showLine();

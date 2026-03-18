@@ -112,7 +112,19 @@ public class Trade {
                 outcome + " | " +
                 strategy;
     }
-  
+    
+    public String getTicker() {
+        return ticker;
+    }
+
+    public String getStrategy() {
+        return strategy;
+    }
+
+    public double getEntryPrice() {
+        return entryPrice;
+    }
+
     public void setTicker(String ticker) {
         this.ticker = ticker;
     }
