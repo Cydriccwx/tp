@@ -59,54 +59,48 @@ public class EditCommand extends Command {
      */
     @Override
     public void execute(TradeList tradeList, Ui ui, Storage storage) {
-        try {
-            if (targetIndex < 0 || targetIndex >= tradeList.size()) {
-                ui.showError("Trade index out of bounds.");
-                return;
-            }
-
-            Trade tradeToEdit = tradeList.getTrade(targetIndex);
-
-            // 1. Parse and stage updated values in local variables (Pre-computation)
-            String newTicker = parsedArgs.containsKey("t/")
-                    ? ParserUtil.parseTicker(parsedArgs.get("t/")) : tradeToEdit.getTicker();
-            String newDate = parsedArgs.containsKey("d/")
-                    ? parsedArgs.get("d/") : tradeToEdit.getDate();
-            String newDir = parsedArgs.containsKey("dir/")
-                    ? ParserUtil.parseDirection(parsedArgs.get("dir/")) : tradeToEdit.getDirection();
-            double newEntry = parsedArgs.containsKey("e/")
-                    ? ParserUtil.parsePrice(parsedArgs.get("e/"), "Entry") : tradeToEdit.getEntryPrice();
-            double newExit = parsedArgs.containsKey("x/")
-                    ? ParserUtil.parsePrice(parsedArgs.get("x/"), "Exit") : tradeToEdit.getExitPrice();
-            double newStop = parsedArgs.containsKey("s/")
-                    ? ParserUtil.parsePrice(parsedArgs.get("s/"), "Stop Loss") : tradeToEdit.getStopLossPrice();
-            String newOutcome = parsedArgs.getOrDefault("o/", tradeToEdit.getOutcome());
-            String newStrat = parsedArgs.getOrDefault("strat/", tradeToEdit.getStrategy());
-
-            // 2. Business Logic Validation (Reusing teammate's methods)
-            // Step A: Ensure entry and stop loss are not the same
-            ParserUtil.validatePrices(newEntry, newStop);
-
-            // Step B: Ensure stop loss is on the correct side
-            // Note: teammate's validateStopLoss expects lowercase "long"/"short"
-            ParserUtil.validateStopLoss(newDir.toLowerCase(), newEntry, newStop);
-
-            // 3. Atomicity: Commit changes only if ALL previous steps (Parsing & Validation) passed
-            tradeToEdit.setTicker(newTicker);
-            tradeToEdit.setDate(newDate);
-            tradeToEdit.setDirection(newDir);
-            tradeToEdit.setEntryPrice(newEntry);
-            tradeToEdit.setExitPrice(newExit);
-            tradeToEdit.setStopLossPrice(newStop);
-            tradeToEdit.setOutcome(newOutcome);
-            tradeToEdit.setStrategy(newStrat);
-
-            ui.showTradeUpdated(targetIndex + 1);
-            ui.printTrade(tradeToEdit);
-
-        } catch (TradeLogException e) {
-            // Any parsing or validation error stops the update, leaving original data untouched
-            ui.showError(e.getMessage());
+        if (targetIndex < 0 || targetIndex >= tradeList.size()) {
+            ui.showError("Trade index out of bounds.");
+            return;
         }
+
+        Trade tradeToEdit = tradeList.getTrade(targetIndex);
+
+        // 1. Parse and stage updated values in local variables (Pre-computation)
+        String newTicker = parsedArgs.containsKey("t/")
+                ? ParserUtil.parseTicker(parsedArgs.get("t/")) : tradeToEdit.getTicker();
+        String newDate = parsedArgs.containsKey("d/")
+                ? parsedArgs.get("d/") : tradeToEdit.getDate();
+        String newDir = parsedArgs.containsKey("dir/")
+                ? ParserUtil.parseDirection(parsedArgs.get("dir/")) : tradeToEdit.getDirection();
+        double newEntry = parsedArgs.containsKey("e/")
+                ? ParserUtil.parsePrice(parsedArgs.get("e/"), "Entry") : tradeToEdit.getEntryPrice();
+        double newExit = parsedArgs.containsKey("x/")
+                ? ParserUtil.parsePrice(parsedArgs.get("x/"), "Exit") : tradeToEdit.getExitPrice();
+        double newStop = parsedArgs.containsKey("s/")
+                ? ParserUtil.parsePrice(parsedArgs.get("s/"), "Stop Loss") : tradeToEdit.getStopLossPrice();
+        String newOutcome = parsedArgs.getOrDefault("o/", tradeToEdit.getOutcome());
+        String newStrat = parsedArgs.getOrDefault("strat/", tradeToEdit.getStrategy());
+
+        // 2. Business Logic Validation (Reusing teammate's methods)
+        // Step A: Ensure entry and stop loss are not the same
+        ParserUtil.validatePrices(newEntry, newStop);
+
+        // Step B: Ensure stop loss is on the correct side
+        // Note: teammate's validateStopLoss expects lowercase "long"/"short"
+        ParserUtil.validateStopLoss(newDir.toLowerCase(), newEntry, newStop);
+
+        // 3. Atomicity: Commit changes only if ALL previous steps (Parsing & Validation) passed
+        tradeToEdit.setTicker(newTicker);
+        tradeToEdit.setDate(newDate);
+        tradeToEdit.setDirection(newDir);
+        tradeToEdit.setEntryPrice(newEntry);
+        tradeToEdit.setExitPrice(newExit);
+        tradeToEdit.setStopLossPrice(newStop);
+        tradeToEdit.setOutcome(newOutcome);
+        tradeToEdit.setStrategy(newStrat);
+
+        ui.showTradeUpdated(targetIndex + 1);
+        ui.printTrade(tradeToEdit);
     }
 }
