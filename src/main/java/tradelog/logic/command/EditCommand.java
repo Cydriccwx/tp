@@ -93,6 +93,13 @@ public class EditCommand extends Command {
             if (parsedArgs.containsKey("strat/")) {
                 tradeToEdit.setStrategy(parsedArgs.get("strat/"));
             }
+
+            ParserUtil.validateDirection(
+                    tradeToEdit.getDirection(),
+                    tradeToEdit.getEntryPrice(),
+                    tradeToEdit.getStopLossPrice()
+            );
+
             ui.showTradeUpdated(targetIndex + 1);
             ui.printTrade(tradeToEdit);
         } catch (TradeLogException e) {
