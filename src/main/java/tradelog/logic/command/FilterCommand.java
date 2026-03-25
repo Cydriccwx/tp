@@ -38,4 +38,29 @@ public class FilterCommand extends Command {
             throw new TradeLogException("Use at least one filter: t/<ticker>, strat/<strategy>, d/<date>");
         }
     }
+
+    @Override
+    public void execute(TradeList tradeList, Ui ui, Storage storage) {
+        assert tradeList != null : "TradeList should not be null";
+        assert ui != null : "Ui should not be null";
+
+        TradeList filteredTradeList = new TradeList();
+
+        for (int i = 0; i < tradeList.size(); i++) {
+            Trade trade = tradeList.getTrade(i);
+            boolean matchesTicker = ticker.isEmpty() || trade.getTicker().equals(ticker);
+            boolean matchesStrategy = strategy.isEmpty() || trade.getStrategy().equalsIgnoreCase(strategy);
+            boolean matchesDate = date.isEmpty() || trade.getDate().equals(date);
+
+            if (matchesTicker && matchesStrategy && matchesDate) {
+                filteredTradeList.addTrade(trade);
+            }
+        }
+
+        if (filteredTradeList.isEmpty()) {
+            ui.showMessage("No trades match the filter criteria.");
+        } else {
+            ui.printTradeList(filteredTradeList);
+        }
+    }
 }
