@@ -32,7 +32,7 @@
 * **Strategy Shortcuts** - Enter common strategies via shorthand codes such as `BB`, `PB`, or `MTR` and TradeLog expands them to the canonical names before storing and filtering trades (see Section 6).
 * **Strategy Comparison: `compare`** - View per-strategy metrics (win rate, average win/loss, and EV) in one report to identify the strongest systems (see Section 7).
 
-### [Version 3.0] - Advanced Analytics & Export (Planned)
+### [Version 2.1] - Advanced Analytics & Export (Planned)
 *The following ideas remain on the roadmap for future releases.*
 
 * **Psychological Tagging** - Log emotional states to identify behavioral patterns.
@@ -73,18 +73,18 @@ Accepted strategy shortcuts: `BB`, `TBF`, `PB`, `MTR`, `HOD`, `LOD`, `MR`, `TR`,
 
 TradeLog expands common strategy abbreviations automatically before saving or filtering trades.
 
-| Shortcut | Strategy |
-|:---------|:---------|
-| `BB`     | `Breakout` |
-| `TBF`    | `Trend Bar Failure` |
-| `PB`     | `Pullback` |
+| Shortcut | Strategy               |
+|:---------|:-----------------------|
+| `BB`     | `Breakout`             |
+| `TBF`    | `Trend Bar Failure`    |
+| `PB`     | `Pullback`             |
 | `MTR`    | `Major Trend Reversal` |
-| `HOD`    | `High of Day` |
-| `LOD`    | `Low of Day` |
-| `MR`     | `Mean Reversion` |
-| `TR`     | `Trading Range` |
-| `DB`     | `Double Bottom` |
-| `DT`     | `Double Top` |
+| `HOD`    | `High of Day`          |
+| `LOD`    | `Low of Day`           |
+| `MR`     | `Mean Reversion`       |
+| `TR`     | `Trading Range`        |
+| `DB`     | `Double Bottom`        |
+| `DT`     | `Double Top`           |
 
 Example:
 

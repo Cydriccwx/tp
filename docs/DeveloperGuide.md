@@ -404,25 +404,25 @@ TradeLog helps financial trading professionals systematically log, manage, and a
 | **v2.0** | trader               | mark a ticker as "watched but not taken"                           | Remember which setups I passed on during review           |
 | **v2.0** | power user           | use shortcut codes for strategy names (e.g., BB, PB)               | I can log trades faster without typing full names         |
 | **v2.0** | trader               | compare performance across all strategies in one view              | I can identify which strategy has the best edge           |
-| **v3.0** | trader               | tag each trade with my emotional state                             | I can identify psychological patterns                     |
-| **v3.0** | trader               | view a summary over a selected date range                          | I can analyze short-term results                          |
-| **v3.0** | trader               | view my win rate for a specific strategy                           | I can assess its consistency                              |
-| **v3.0** | trader               | calculate average risk per trade                                   | I can monitor my risk management discipline               |
-| **v3.0** | trader               | back up my trading data locally                                    | I do not lose my records                                  |
-| **v3.0** | trader               | load previously saved trading sessions                             | I can continue my analysis seamlessly                     |
-| **v3.0** | trader               | complete a pre-trade checklist before entry                        | I follow my trading plan consistently                     |
-| **v3.0** | trader               | view multiple strategies side-by-side                              | Objectively compare their performance                     |
-| **v3.0** | trader               | automatically calculate maximum drawdown                           | I understand my worst-case risk exposure                  |
-| **v3.0** | trader               | export trades from a specific date range to CSV                    | Share selected periods with my mentor or accountant       |
-| **v3.0** | trader               | automatically calculate the R-multiple                             | I evaluate performance relative to risk                   |
-| **v3.0** | trader               | review a summary and confirm before saving                         | So that I catch typos before they enter my records        |
-| **v3.0** | inexperienced trader | see how many trades I've taken today                               | So that I know if I'm overtrading                         |
-| **v3.0** | trader               | receive an alert if win rate drops below threshold                 | I can review and adjust my strategy promptly              |
-| **v3.0** | trader               | write reflections for each trade                                   | I can improve my decision-making process                  |
-| **v3.0** | trader               | filter and analyze trades by time of day                           | I can identify when I perform best                        |
-| **v3.0** | trader               | Bulk import historical trades                                      | I can test my trading systems on other datasets           |
-| **v3.0** | trader               | attach a chart screenshot to each trade                            | I can visually review my entry and exit decisions         |
-| **v3.0** | trader               | see my total capital currently at risk                             | I avoid overexposure                                      |
+| **v2.1** | trader               | tag each trade with my emotional state                             | I can identify psychological patterns                     |
+| **v2.1** | trader               | view a summary over a selected date range                          | I can analyze short-term results                          |
+| **v2.1** | trader               | view my win rate for a specific strategy                           | I can assess its consistency                              |
+| **v2.1** | trader               | calculate average risk per trade                                   | I can monitor my risk management discipline               |
+| **v2.1** | trader               | back up my trading data locally                                    | I do not lose my records                                  |
+| **v2.1** | trader               | load previously saved trading sessions                             | I can continue my analysis seamlessly                     |
+| **v2.1** | trader               | complete a pre-trade checklist before entry                        | I follow my trading plan consistently                     |
+| **v2.1** | trader               | view multiple strategies side-by-side                              | Objectively compare their performance                     |
+| **v2.1** | trader               | automatically calculate maximum drawdown                           | I understand my worst-case risk exposure                  |
+| **v2.1** | trader               | export trades from a specific date range to CSV                    | Share selected periods with my mentor or accountant       |
+| **v2.1** | trader               | automatically calculate the R-multiple                             | I evaluate performance relative to risk                   |
+| **v2.1** | trader               | review a summary and confirm before saving                         | So that I catch typos before they enter my records        |
+| **v2.1** | inexperienced trader | see how many trades I've taken today                               | So that I know if I'm overtrading                         |
+| **v2.1** | trader               | receive an alert if win rate drops below threshold                 | I can review and adjust my strategy promptly              |
+| **v2.1** | trader               | write reflections for each trade                                   | I can improve my decision-making process                  |
+| **v2.1** | trader               | filter and analyze trades by time of day                           | I can identify when I perform best                        |
+| **v2.1** | trader               | Bulk import historical trades                                      | I can test my trading systems on other datasets           |
+| **v2.1** | trader               | attach a chart screenshot to each trade                            | I can visually review my entry and exit decisions         |
+| **v2.1** | trader               | see my total capital currently at risk                             | I avoid overexposure                                      |
 
 ---
 
