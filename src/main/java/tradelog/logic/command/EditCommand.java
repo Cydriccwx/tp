@@ -58,7 +58,7 @@ public class EditCommand extends Command {
      * @param storage   The storage handler for data persistence.
      */
     @Override
-    public void execute(TradeList tradeList, Ui ui, Storage storage) {
+    public void execute(TradeList tradeList, Ui ui, Storage storage) throws TradeLogException{
         if (targetIndex < 0 || targetIndex >= tradeList.size()) {
             throw new TradeLogException("Trade index out of bounds.");
         }
