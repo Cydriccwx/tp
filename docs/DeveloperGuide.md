@@ -539,6 +539,192 @@ Traders tend to think of their strategies in the order they used them, not alpha
 - **A `filterByStrategy` method on `TradeList`**: This was considered to avoid iterating through all trades in `CompareCommand`. However, it would require multiple passes (one per unique strategy), making it O(n x k) where `k` is the number of strategies. The single-pass accumulation approach is O(n) and simpler.
 - **Storing `StrategyStats` inside `TradeList` as a cached field**: Rejected because it would couple the model to a specific reporting concept and require cache invalidation on every add/edit/delete.
 
+---
+
+#### 2.2.9 Storage Component (Encrypted Persistence)
+
+##### Architecture-Level Description
+
+`Storage` is the sole class responsible for reading and writing trade data to disk. All data is encrypted at rest using **AES-128** symmetric encryption. The encryption key is derived from the user's password via a **SHA-256** hash, with only the first 16 bytes used to form the AES key. No plaintext trade records are ever written to the file.
+
+The file format is:
+
+```
+<SHA-256 password hash (Base64)>
+<AES-encrypted trade line 1 (Base64)>
+<AES-encrypted trade line 2 (Base64)>
+...
+```
+
+The first line is the Base64-encoded SHA-256 hash of the password. This is used on load to verify that the correct password has been provided before any decryption is attempted.
+
+`Storage` has no dependency on `Ui`, `Parser`, or any `Command`. It only depends on `TradeList` and `Trade` from the model layer, keeping coupling minimal.
+
+##### Component-Level Description
+
+| Method | Responsibility |
+|---|---|
+| `setPassword(String)` | Derives the AES key and stores the password hash. Must be called before `saveTrades` or `loadTrades`. |
+| `saveTrades(TradeList)` | Creates parent directories if needed, writes the password hash on line 1, then writes one AES-encrypted, Base64-encoded trade string per line. |
+| `loadTrades()` | Reads line 1 and compares it to `passwordHash`. If it matches, decrypts each subsequent line, parses the 8-field pipe-delimited format, and populates a `TradeList`. |
+| `exists()` | Returns whether the underlying file is present on disk. Used by `ProfileManager` during startup. |
+
+The encryption and decryption use Java's `javax.crypto.Cipher` in `AES/ECB` mode (the default single-block `"AES"` transformation). Each trade's `toStorageString()` output (pipe-delimited) is individually encrypted and Base64-encoded before being written as a line.
+
+##### Sequence Diagram — `saveTrades` on exit
+![Save Trades on exit Sequence Diagram](diagrams/save-trades-on-exit-diagram.png)
+
+##### Sequence Diagram — `loadTrades` on startup
+![Load Trades Diagram](diagrams/load-trades-diagram.png)
+
+##### Design Rationale
+
+**Why derive the key from a password hash rather than storing the key directly?**
+The password hash acts as both the AES key seed and the per-file identity marker (the first line of each profile file). This allows `ProfileManager` to determine which file belongs to which user without storing any plaintext credential.
+
+**Why AES-128 and not AES-256?**
+AES-128 (16-byte key) is sufficient for protecting trade records from casual access. Moving to AES-256 would require only changing the `Arrays.copyOf` length from 16 to 32; the rest of the implementation is unchanged.
+
+**Why encrypt each trade line independently rather than the whole file?**
+Individual-line encryption makes the format robust: a single corrupted line affects only that trade, not the rest of the file. It also maps naturally to the line-by-line read loop in `loadTrades`.
+
+**Alternatives considered:**
+- **Storing plaintext**: Rejected. A trader's position sizes, entry/exit prices, and strategies are commercially sensitive. Plaintext storage would expose this data to anyone with filesystem access.
+- **Storing only a password prompt and trusting the key**: Rejected because without the stored hash on line 1, `ProfileManager` would have no way to distinguish a wrong-password decryption failure from a corrupted file.
+
+---
+
+#### 2.2.10 ProfileManager (Multi-Profile Support)
+
+##### Architecture-Level Description
+
+`ProfileManager` is the startup component that resolves which storage file belongs to the current user. It sits between `TradeLog`'s constructor and the `Storage` class, and is the only class that knows how multiple profile files are named or how to scan them.
+
+The password is **not** passed in from `TradeLog`. Instead, `ProfileManager` reads it interactively from the user via `Ui.readPassword()` at startup, displaying a context-sensitive prompt depending on whether any profile files already exist.
+
+Profile files follow the naming convention:
+
+```
+<baseDir>/<baseName>.txt          ← index 0 (the default)
+<baseDir>/<baseName>_1.txt        ← index 1
+<baseDir>/<baseName>_2.txt        ← index 2
+...
+```
+
+Each file belongs to exactly one password (identified by the SHA-256 hash stored on its first line). `findNextAvailablePath()` determines the path for a new profile by scanning for the first suffix index whose file does not yet exist.
+
+##### Component-Level Description
+
+The constructor `ProfileManager(String baseDir, String baseName, Ui ui)` runs the following logic:
+
+1. **Determine whether any profile files exist** by checking if `<baseDir>/<baseName>.txt` is present on disk.
+2. **Prompt for a password** via `ui.readPassword(prompt)`:
+   - If no files exist: `"No profiles found. Create a new password:"`
+   - If files exist: `"Enter password to load your profile (or create a new one):"`
+3. **Branch on file existence:**
+   - **No files exist** → call `createNewProfile(...)` immediately with message `"No existing profile found. Creating new profile..."` and exit.
+   - **Files exist** → call `tryLoadExistingProfile(...)`:
+     - **Returns `true`** (password matched a file): constructor exits successfully.
+     - **Returns `false`** (no file matched the password): prompt the user `"No profile found for the entered password. Create a new profile? (yes/no):"`.
+       - If the user answers `"yes"`: call `createNewProfile(...)` with message `"Creating new profile..."` and exit.
+       - If the user answers anything else: loop back to step 2 and re-prompt for the password.
+
+After the constructor completes, `getActiveStorage()` and `getLoadedTrades()` pass the result to `TradeLog`.
+
+| Method | Responsibility |
+|---|---|
+| `ProfileManager(String, String, Ui)` | Interactive startup: prompts for password, finds or creates the matching profile. |
+| `tryLoadExistingProfile(String, String, String, Ui)` | Iterates over existing numbered files, attempts `setPassword` + `loadTrades` on each; returns `true` on a hash match. |
+| `createNewProfile(String, String, String, Ui, String)` | Finds the next available file path, initialises a fresh `Storage`, calls `setPassword`, and sets `loadedTrades` to a new empty `TradeList`. |
+| `findNextAvailablePath(String, String)` | Returns the first `<baseDir>/<baseName>_N.txt` path (or `<baseName>.txt` for index 0) that does not yet exist on disk. |
+| `getActiveStorage()` | Returns the `Storage` instance resolved during construction. |
+| `getLoadedTrades()` | Returns the `TradeList` loaded (or newly created) during construction. |
+
+##### Sequence Diagram — startup with an existing matching profile
+![Existing Matching Profile Diagram](diagrams/existing-matching-profile-diagram.png)
+
+##### Sequence Diagram — startup when password does not match, user opts to create new profile
+![Password Mismatch and New Profile Creation Diagram](diagrams/password-mismatch-and-new-profile-creation-diagram.png)
+
+##### Design Rationale
+
+**Why does `ProfileManager` read the password interactively rather than receiving it as a constructor argument?**
+Keeping password acquisition inside `ProfileManager` avoids passing a sensitive credential through `TradeLog`'s constructor. `ProfileManager` owns the full login loop — prompting, validating, and retrying — without exposing that state to its caller.
+
+**Why scan files sequentially rather than encoding the profile index in the file itself?**
+Keeping profile selection implicit (driven purely by password matching) means the user never needs to remember a profile number. The password is the sole credential.
+
+**Why prompt the user before creating a new profile when no match is found?**
+Silently creating a new profile on a password mismatch would produce spurious empty profiles from typographical errors. The `yes/no` confirmation lets the user retry their password instead, preventing unintended profile proliferation.
+
+**Alternatives considered:**
+- **Single file for all users**: Rejected. A single file would require a more complex internal structure to separate users' data and would make per-user password protection harder.
+- **Using a directory per user**: Considered but rejected for simplicity. The sequential suffix convention is easy to implement and requires no directory management.
+
+---
+
+#### 2.2.11 FilterCommand
+
+##### Architecture-Level Description
+
+`FilterCommand` provides read-only querying of the in-memory `TradeList` without modifying any state. It supports filtering by up to three independent criteria — **ticker**, **strategy**, and **date** — applied as a logical AND. It also supports an optional **partial-match mode** (`-p` flag) that uses substring/case-insensitive matching instead of exact equality.
+
+After displaying the matched trades, `FilterCommand` delegates to `SummaryCommand` on the filtered subset, giving the user performance metrics for just the filtered trades without any extra command.
+
+##### Component-Level Description
+
+The constructor parses the argument string in two steps:
+
+1. `ArgumentTokeniser.tokenise` extracts the values for `t/`, `strat/`, and `d/`. Missing prefixes default to empty strings.
+2. The `-p` flag is detected by checking whether the raw argument array contains the literal string `"-p"`.
+3. If all three criteria are empty after parsing, a `TradeLogException` is thrown: at least one filter must be provided.
+
+The `execute` method:
+
+1. Iterates through all trades in `tradeList`.
+2. For each trade, evaluates three boolean conditions (`matchesTicker`, `matchesStrategy`, `matchesDate`). An empty criterion always evaluates to `true` (i.e., it is not applied).
+3. **Exact mode** (default): uses `equals` for ticker and date, `equalsIgnoreCase` for strategy.
+4. **Partial mode** (`-p`): uses `contains` for ticker and date, `toLowerCase().contains(toLowerCase())` for strategy.
+5. Matching trades are collected into both an index list (for display with their original 1-based numbers) and a new `TradeList` (for the summary calculation).
+6. If no matches are found, `ui.showMessage("No trades match the filter criteria.")` is called.
+7. If matches are found, the matched trades are printed with their original indices, then `SummaryCommand.execute(filteredTrades, ui, storage)` is called on the subset.
+
+##### Sequence Diagram — `filter t/AAPL` with two trades in list
+![Filtering Trades Diagram](diagrams/filtering-trades-diagram.png)
+
+##### Supported Filter Criteria
+
+| Prefix | Field matched | Exact mode | Partial mode (`-p`) |
+|--------|--------------|-----------|---------------------|
+| `t/`   | Ticker symbol | `equals` | `contains` |
+| `strat/` | Strategy name | `equalsIgnoreCase` | case-insensitive `contains` |
+| `d/`   | Trade date | `equals` | `contains` (useful for filtering by year or month, e.g., `d/2026-03`) |
+
+##### Usage Examples
+
+```
+filter t/AAPL                        → exact ticker match
+filter strat/Breakout d/2026-03      → trades with Breakout strategy in March 2026
+filter -p t/AA                       → all tickers containing "AA" (e.g., AAPL, AAVE)
+filter -p strat/break                → case-insensitive partial strategy match
+```
+
+##### Design Rationale
+
+**Why delegate the summary to `SummaryCommand` rather than duplicating the logic?**
+`SummaryCommand` already computes win rate, average win/loss, EV, and total R from a `TradeList`. Delegating avoids duplication and guarantees that the filtered-subset metrics are always consistent with the full-list metrics produced by `summary`.
+
+**Why use original 1-based indices (from the full list) when displaying filtered results?**
+Displaying the original index allows the user to immediately act on a filtered result — for example, using `edit 3` or `delete 3` on a trade found via `filter` without needing to re-run `list` to look up the index.
+
+**Why require at least one criterion instead of allowing `filter` with no arguments to return all trades?**
+`filter` with no criteria would be functionally identical to `list`. Requiring at least one criterion prevents accidental no-op calls and keeps the command's intent clear.
+
+**Alternatives considered:**
+- **Separate `filter-partial` command**: Rejected. Having `-p` as an inline flag keeps the command surface small and the user does not need to remember two separate command names.
+- **Chained filter pipeline (filter feeds into another filter)**: Considered as a future feature. The current AND-of-criteria design handles the most common cases; a pipeline could be introduced if users need OR logic.
+
+---
 
 ## 3. Product Scope
 
