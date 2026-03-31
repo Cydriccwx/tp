@@ -7,7 +7,7 @@ import tradelog.model.TradeList;
 import tradelog.storage.Storage;
 import tradelog.ui.Ui;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests for UndoCommand.
