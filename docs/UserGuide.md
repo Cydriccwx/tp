@@ -26,11 +26,17 @@
 * **Exit: `exit`** – Terminate the application and view final metrics including Win Rate, Average Win/Loss, EV, and Total R.
 
 ### [Version 2.0] - System & Logic Enhancement
-*Planned features for advanced strategy management.*
+*These features are fully functional in the current release.*
+
+* **Filtering Trades: `filter`** – Filter trades by ticker, strategy, and/or date, with optional partial matching (`-p` flag). Displays matching trades and a filtered performance summary.
+* **Strategy Comparison: `compare`** – View per-strategy performance metrics (Trade count, Win Rate, Avg Win/Loss, EV).
+* **Strategy Shortcuts** – Shorthand codes (e.g. `BB`, `PB`) are automatically expanded to full strategy names.
+
+### [Version 3.0] - Advanced Analytics & Export
+*Planned features for future releases.*
 
 * **Duplicate Warning** – Alerts for duplicate entries of the same ticker, date, and price.
 * **Daily Loss Limit** – System warnings when a pre-set daily risk cap is hit.
-* **Filtering & Sorting** – Review performance by specific tickers or sort by profit/loss.
 * **Streak Tracking** – Monitor win/loss streaks to manage psychological state.
 * **Alias Support** – Create short aliases for long ticker symbols.
 * **Testing Mode** – Switch between "Backtest" and "Live" modes to separate datasets.
@@ -169,7 +175,44 @@ Total R: +11.50R
 --------------------------------------------------------------------------------
 ```
 
-### 5.6 Exiting the Program: `exit`
+### 5.6 Filtering Trades: `filter`
+Searches your trade log and returns only the entries that match the criteria you provide. You can filter by ticker, strategy, and/or date. At least one filter must be specified. The matching trades are displayed along with a performance summary for the filtered subset.
+
+Use the optional `-p` flag to enable **partial matching**, which allows substring searches (e.g., `strat/Break` will match `Breakout`).
+
+**Format**: `filter [-p] [t/TICKER] [strat/STRATEGY] [d/DATE]`
+
+**Examples:**
+
+Filter all trades with ticker symbol TSLA:
+`filter t/TSLA`
+
+Filter all AAPL trades on a specific date:
+`filter t/AAPL d/2026-03-18`
+
+Filter all trades from the year 2026 (partial match):
+`filter -p d/2026`
+
+**Expected Output:**
+
+```text
+--------------------------------------------------------------------------------
+1. AAPL | 2026-03-18 | Long | E:150 | TP:165 | SL:140 | win | Breakout
+3. TSLA | 2026-05-20 | Long | E:200 | TP:220 | SL:190 | win | Breakout
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+Overall Performance:
+
+Total Trades: 2
+Win Rate: 100%
+Average Win: 2.00R
+Average Loss: 0.00R
+Overall EV: +2.00R
+Total R: +4.00R
+--------------------------------------------------------------------------------
+```
+
+### 5.7 Exiting the Program: `exit`
 Safely saves your data to the local text file and shuts down TradeLog.
 
 **Format**: `exit`
